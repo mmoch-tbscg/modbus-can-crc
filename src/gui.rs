@@ -60,7 +60,6 @@ impl eframe::App for CanCrcApp {
                             .desired_width(400.0)
                             .hint_text("101010111100..."));
                         
-                        // Walidacja w czasie rzeczywistym
                         if response.changed() {
                             self.binary_input = self.binary_input.chars()
                                 .filter(|c| c.is_whitespace() || *c == '0' || *c == '1')
@@ -69,7 +68,6 @@ impl eframe::App for CanCrcApp {
                     });
                     ui.small("Format: tylko 0 i 1, maksymalnie 96 bitów");
                     
-                    // Pokaż liczbę bitów
                     let bit_count = self.binary_input.chars().filter(|c| *c == '0' || *c == '1').count();
                     if bit_count > 0 {
                         ui.small(format!("Wprowadzono: {} bitów", bit_count));
@@ -82,14 +80,12 @@ impl eframe::App for CanCrcApp {
                             .desired_width(400.0)
                             .hint_text("AA BB CC DD"));
                         
-                        // Konwertuj na wielkie litery
                         if response.changed() {
                             self.hex_input = self.hex_input.to_uppercase();
                         }
                     });
                     ui.small("Format: AA BB CC DD (oddzielone spacjami, maks. 12 bajtów = 96 bitów)");
                     
-                    // Pokaż liczbę bajtów
                     let hex_chars = self.hex_input.chars().filter(|c| c.is_ascii_hexdigit()).count();
                     if hex_chars > 0 && hex_chars % 2 == 0 {
                         ui.small(format!("Wprowadzono: {} bajtów = {} bitów", hex_chars / 2, hex_chars * 4));
@@ -105,7 +101,6 @@ impl eframe::App for CanCrcApp {
                     .desired_width(150.0)
                     .hint_text("1000000"));
                 
-                // Filtruj tylko cyfry
                 if response.changed() {
                     self.iterations_input = self.iterations_input.chars()
                         .filter(|c| c.is_ascii_digit())

@@ -1,10 +1,8 @@
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicU16, Ordering};
 
-/// CAN CRC polynomial: 0x4599
 const CAN_POLY: u16 = 0x4599;
 
-/// Result structure for CRC calculation
 #[derive(Debug, Clone)]
 pub struct CrcResult {
     pub crc_value: u16,
@@ -22,13 +20,11 @@ impl CrcResult {
     }
 }
 
-/// Parse binary string input (e.g., "101010111100...")
 pub fn parse_binary_input(input: &str) -> Result<Vec<bool>, String> {
     if input.trim().is_empty() {
         return Err("❌ Błąd: Dane wejściowe są puste".to_string());
     }
     
-    // Najpierw sprawdź czy są nieprawidłowe znaki
     let invalid_chars: Vec<char> = input.chars()
         .filter(|c| !c.is_whitespace() && *c != '0' && *c != '1')
         .collect();
@@ -61,7 +57,6 @@ pub fn parse_binary_input(input: &str) -> Result<Vec<bool>, String> {
         .collect())
 }
 
-/// Parse hex string input (e.g., "AA BB CC")
 pub fn parse_hex_input(input: &str) -> Result<Vec<bool>, String> {
     if input.trim().is_empty() {
         return Err("❌ Błąd: Dane wejściowe są puste".to_string());
@@ -69,7 +64,6 @@ pub fn parse_hex_input(input: &str) -> Result<Vec<bool>, String> {
     
     let cleaned = input.trim().to_uppercase();
     
-    // Sprawdź nieprawidłowe znaki
     let invalid_chars: Vec<char> = cleaned.chars()
         .filter(|c| !c.is_ascii_hexdigit() && !c.is_whitespace())
         .collect();
@@ -117,7 +111,6 @@ pub fn parse_hex_input(input: &str) -> Result<Vec<bool>, String> {
     }
 }
 
-/// Convert bytes to bits (MSB first)
 fn bytes_to_bits(bytes: &[u8]) -> Vec<bool> {
     let mut bits = Vec::with_capacity(bytes.len() * 8);
     for byte in bytes {
@@ -128,18 +121,14 @@ fn bytes_to_bits(bytes: &[u8]) -> Vec<bool> {
     bits
 }
 
-/// Basic CAN CRC calculation (following the algorithm specification)
 pub fn calculate_can_crc(bits: &[bool]) -> u16 {
     let mut crc_rg: u16 = 0;
     
     for &nxtbit in bits {
-        // CRCNXT = NXTBIT EXOR CRC_RG(14)
         let crcnxt = nxtbit ^ ((crc_rg >> 14) & 1 == 1);
         
-        // CRC_RG(14:1) = CRC_RG(13:0)
         crc_rg = (crc_rg << 1) & 0x7FFF;
         
-        // IF CRCNXT THEN CRC_RG(14:0) = CRC_RG(14:0) EXOR (4599hex)
         if crcnxt {
             crc_rg ^= CAN_POLY;
         }
@@ -148,14 +137,11 @@ pub fn calculate_can_crc(bits: &[bool]) -> u16 {
     crc_rg
 }
 
-/// Optimized CAN CRC calculation using lookup table
 pub fn calculate_can_crc_optimized(bits: &[bool]) -> u16 {
-    // Pre-calculate CRC for each possible byte
     static CRC_TABLE: [u16; 256] = generate_crc_table();
     
     let mut crc_rg: u16 = 0;
     
-    // Process complete bytes first
     let full_bytes = bits.len() / 8;
     for i in 0..full_bytes {
         let mut byte = 0u8;
@@ -165,12 +151,10 @@ pub fn calculate_can_crc_optimized(bits: &[bool]) -> u16 {
             }
         }
         
-        // Process byte using lookup table
         let tbl_idx = ((crc_rg >> 7) ^ (byte as u16)) as u8;
         crc_rg = ((crc_rg << 8) ^ CRC_TABLE[tbl_idx as usize]) & 0x7FFF;
     }
     
-    // Process remaining bits
     for i in (full_bytes * 8)..bits.len() {
         let nxtbit = bits[i];
         let crcnxt = nxtbit ^ ((crc_rg >> 14) & 1 == 1);
@@ -183,7 +167,6 @@ pub fn calculate_can_crc_optimized(bits: &[bool]) -> u16 {
     crc_rg
 }
 
-/// Generate CRC lookup table
 const fn generate_crc_table() -> [u16; 256] {
     let mut table = [0u16; 256];
     let mut i = 0;
@@ -208,13 +191,11 @@ const fn generate_crc_table() -> [u16; 256] {
     table
 }
 
-/// Compute CRC multiple times with optimization
 pub fn compute_batch_crcs_optimized(bits: &[bool], iterations: u64, verbose: bool) -> u16 {
     if iterations == 1 {
         return calculate_can_crc_optimized(bits);
     }
     
-    // For large iteration counts, use parallel processing
     if iterations >= 100_000 {
         if verbose {
             println!("ℹ️  Używanie przetwarzania równoległego dla {} iteracji", iterations);
@@ -243,7 +224,6 @@ pub fn compute_batch_crcs_optimized(bits: &[bool], iterations: u64, verbose: boo
         
         result.load(Ordering::Relaxed)
     } else {
-        // For smaller counts, sequential is more efficient
         let mut crc = 0u16;
         for _ in 0..iterations {
             crc = calculate_can_crc_optimized(bits);
