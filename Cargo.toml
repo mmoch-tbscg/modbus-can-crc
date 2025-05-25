@@ -1,0 +1,27 @@
+[package]
+name = "can_crc_project"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "cli"
+path = "src/cli.rs"
+
+[[bin]]
+name = "gui"
+path = "src/gui.rs"
+
+[dependencies]
+eframe = "0.28"
+egui = "0.28"
+rayon = "1.8"
+clap = { version = "4.4", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[target.'cfg(windows)'.dependencies]
+winres = "0.1" 
