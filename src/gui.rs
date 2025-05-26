@@ -6,7 +6,7 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([900.0, 750.0])
-            .with_title("🚗 Kalkulator CRC CAN"),
+            .with_title("Kalkulator CRC CAN"),
         ..Default::default()
     };
     
@@ -39,7 +39,7 @@ enum InputFormat {
 impl eframe::App for CanCrcApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("🚗 Kalkulator CRC CAN");
+            ui.heading("Kalkulator CRC CAN");
             ui.add_space(10.0);
             ui.separator();
             ui.add_space(15.0);
